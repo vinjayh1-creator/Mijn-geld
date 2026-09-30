@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>Mijn Geld</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.app{max-width:1100px;margin:auto;padding:16px 12px 70px}h1{margin:0;font-size:28px}.sub,.note{color:#687386;font-size:13px}
+.nav{display:flex;gap:7px;overflow-x:auto;position:sticky;top:0;z-index:5;background:#f4f6fa;padding:9px 0}
+.nav button,.btn{min-height:44px;border:1px solid #d2d8e2;border-radius:9px;background:#fff;padding:9px 13px;font-weight:700;white-space:nowrap}
+.nav .active,.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+.page{display:none}.page.active{display:block}.card{background:#fff;border:1px solid #e2e7ef;border-radius:15px;padding:15px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.label{color:#687386;font-size:12px}.big{font-size:24px;font-weight:800;margin-top:6px}
+.green{color:#16a34a}.red{color:#dc2626}.purple{color:#7c3aed}
+.form{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;align-items:end}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:12px;font-weight:700;color:#687386}
+input,select{width:100%;min-height:44px;border:1px solid #cfd6e2;border-radius:9px;padding:9px;background:#fff;font:inherit}
+.table{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:10px;border-bottom:1px solid #e2e7ef;text-align:left}th{font-size:12px;color:#687386;background:#fafbfc}.right{text-align:right}
+.accounts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.account{border:1px solid #e2e7ef;border-radius:11px;padding:13px}.account b{font-size:16px}.bal{font-size:21px;font-weight:800;margin-top:8px}
+.pill{background:#eef2ff;border-radius:99px;padding:4px 8px;font-size:11px}.empty{text-align:center;color:#687386;padding:25px}
+.chart{height:220px;display:grid;grid-template-columns:repeat(12,1fr);gap:7px;align-items:end}.barcol{height:100%;display:flex;flex-direction:column;justify-content:end;text-align:center;font-size:10px;color:#687386}.bar{background:#2563eb;border-radius:5px 5px 0 0;min-height:3px}.barval{font-size:9px;color:#172033;margin-bottom:3px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.danger{color:#dc2626;border-color:#fecaca}
+@media(max-width:850px){.grid{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr 1fr}.accounts{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.app{padding:14px 9px 70px}h1{font-size:25px}.grid{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr}.accounts{grid-template-columns:1fr}.chart{grid-template-columns:repeat(6,1fr);height:240px}.big{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>💰 Mijn Geld</h1>
+<div class="sub">Persoonlijk financieel dashboard · lokaal opgeslagen in deze browser</div>
+
+<nav class="nav">
+<button class="active" data-page="dashboard">Dashboard</button>
+<button data-page="transactions">Transacties</button>
+<button data-page="accounts">Rekeningen</button>
+<button data-page="overview">Overzicht</button>
+<button data-page="backup">Back-up</button>
+</nav>
+
+<section id="dashboard" class="page active">
+<div class="card"><h2>⚡ Snel toevoegen</h2>
+<div class="form">
+<div class="field"><label>Bedrag</label><input id="qa" type="number" min="0" step=".01" placeholder="0,00"></div>
+<div class="field"><label>Omschrijving</label><input id="qd" placeholder="Bijv. boodschappen"></div>
+<div class="field"><label>Type</label><select id="qt"><option value="expense">Uitgave</option><option value="income">Inkomen</option><option value="saving">Sparen</option></select></div>
+<div class="field"><label>Categorie</label><select id="qc"></select></div>
+<div class="field"><label>Rekening</label><select id="qaac"></select></div>
+<button class="btn primary" id="quick">Toevoegen</button>
+</div></div>
+
+<div class="grid">
+<div class="card"><div class="label">Totaal vermogen</div><div class="big" id="total">€ 0,00</div></div>
+<div class="card"><div class="label">Inkomsten</div><div class="big green" id="inc">€ 0,00</div></div>
+<div class="card"><div class="label">Uitgaven</div><div class="big red" id="exp">€ 0,00</div></div>
+<div class="card"><div class="label">Vrij besteedbaar</div><div class="big" id="net">€ 0,00</div></div>
+</div>
+<div class="grid">
+<div class="card"><div class="label">Spaargeld</div><div class="big purple" id="sav">€ 0,00</div></div>
+<div class="card"><div class="label">Beleggingen</div><div class="big" id="inv">€ 0,00</div></div>
+<div class="card"><div class="label">Betaalrekeningen</div><div class="big" id="cur">€ 0,00</div></div>
+<div class="card"><div class="label">Spaarpercentage</div><div class="big purple" id="rate">0%</div></div>
+</div>
+<div class="card"><h2>🏦 Je rekeningen</h2><div class="accounts" id="dashAccounts"></div></div>
+</section>
+
+<section id="transactions" class="page">
+<div class="card"><h2>Transactie toevoegen</h2>
+<div class="form">
+<div class="field"><label>Datum</label><input id="td" type="date"></div>
+<div class="field"><label>Omschrijving</label><input id="txd" placeholder="Salaris, AH, huur..."></div>
+<div class="field"><label>Type</label><select id="txt"><option value="income">Inkomen</option><option value="expense">Uitgave</option><option value="saving">Sparen</option></select></div>
+<div class="field"><label>Categorie</label><select id="txc"></select></div>
+<div class="field"><label>Bedrag</label><input id="txa" type="number" min="0" step=".01"></div>
+<div class="field"><label>Rekening</label><select id="txac"></select></div>
+</div><br><button class="btn primary" id="addtx">+ Toevoegen</button></div>
+<div class="card"><div class="actions"><div class="field"><label>Maand</label><select id="month"></select></div><div class="field"><label>Zoeken</label><input id="search" placeholder="Omschrijving"></div></div><br>
+<div class="table"><table><thead><tr><th>Datum</th><th>Omschrijving</th><th>Type</th><th>Categorie</th><th>Rekening</th><th class="right">Bedrag</th><th></th></tr></thead><tbody id="txrows"></tbody></table></div></div>
+</section>
+
+<section id="accounts" class="page">
+<div class="card"><h2>Rekening toevoegen</h2><div class="form">
+<div class="field"><label>Naam</label><input id="an" placeholder="ING betaalrekening"></div>
+<div class="field"><label>Type</label><select id="at"><option>Betaalrekening</option><option>Spaarrekening</option><option>Belegging</option><option>Overig</option></select></div>
+<div class="field"><label>Beginstand</label><input id="ab" type="number" step=".01"></div>
+</div><br><button class="btn primary" id="adda">+ Rekening toevoegen</button></div>
+<div class="card"><h2>Mijn rekeningen</h2><div class="table"><table><thead><tr><th>Naam</th><th>Type</th><th class="right">Beginstand</th><th class="right">Huidig</th><th></th></tr></thead><tbody id="arows"></tbody></table></div></div>
+<div class="card"><h2>🔄 Overboeking</h2><div class="form">
+<div class="field"><label>Van</label><select id="from"></select></div><div class="field"><label>Naar</label><select id="to"></select></div>
+<div class="field"><label>Bedrag</label><input id="ta" type="number" min="0" step=".01"></div><div class="field"><label>Datum</label><input id="trdate" type="date"></div>
+</div><br><button class="btn primary" id="transfer">Boeking toevoegen</button></div>
+</section>
+
+<section id="overview" class="page">
+<div class="card"><h2>📊 Inkomsten per maand</h2><div class="chart" id="chart"></div></div>
+<div class="card"><h2>Maandoverzicht vanaf oktober 2026</h2><div class="table"><table><thead><tr><th>Maand</th><th class="right">Inkomsten</th><th class="right">Uitgaven</th><th class="right">Sparen</th><th class="right">Netto</th></tr></thead><tbody id="months"></tbody></table></div></div>
+</section>
+
+<section id="backup" class="page">
+<div class="card"><h2>💾 Back-up</h2><p class="note">Maak regelmatig een back-up. Je gegevens staan lokaal in deze browser.</p>
+<div class="actions"><button class="btn primary" id="export">⬇️ Back-up downloaden</button><button class="btn" id="import">⬆️ Back-up terugzetten</button><button class="btn danger" id="reset">Alles wissen</button></div>
+<input id="file" type="file" accept=".json,application/json" hidden>
+</div></section>
+</div>
+
+<script>
+"use strict";
+const KEY="mijn-geld-v3", START="2026-10-01";
+const cats={
+expense:["Boodschappen","Wonen","Vervoer","Uit eten","Vrije tijd","Abonnementen","Kleding","Gezondheid","Verzekeringen","Vakantie","Cadeaus","Overig"],
+income:["Salaris","Extra inkomen","Teruggave/toeslag","Overig inkomen"],
+saving:["Sparen","Beleggen"]
+};
+const mn=["Januari","Februari","Maart","April","Mei","Juni","Juli","Augustus","September","Oktober","November","December"];
+let state=load();
+
+function id(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random())}
+function load(){try{let x=JSON.parse(localStorage.getItem(KEY));if(x&&x.accounts&&x.transactions&&x.transfers)return x}catch(e){}return{accounts:[{id:id(),name:"Betaalrekening",type:"Betaalrekening",opening:0},{id:id(),name:"Spaarrekening",type:"Spaarrekening",opening:0}],transactions:[],transfers:[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function euro(n){return new Intl.NumberFormat("nl-NL",{style:"currency",currency:"EUR"}).format(n||0)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function fillCats(el,type,selected){el.innerHTML=cats[type].map(x=>`<option>${x}</option>`).join("");if(selected)el.value=selected}
+function suggest(s,type){s=(s||"").toLowerCase();if(type==="income")return /salaris|loon|werkgever|randstad|youngcapital/.test(s)?"Salaris":/bonus|vakantiegeld/.test(s)?"Extra inkomen":/toeslag|belastingdienst|teruggave/.test(s)?"Teruggave/toeslag":"Overig inkomen";if(type==="saving")return /beleg/.test(s)?"Beleggen":"Sparen";let r=[["Boodschappen",/ah\\b|albert heijn|jumbo|lidl|aldi|plus\\b|picnic|boodschap/],["Wonen",/huur|hypotheek|energie|gas|water|ziggo|kpn|internet/],["Vervoer",/shell|bp\\b|esso|benzine|tank|parkeren|ns\\b|ovpay|arriva|uber|auto|garage/],["Uit eten",/restaurant|mcdonald|burger king|kfc|subway|thuisbezorgd|pizza|sushi|starbucks/],["Vrije tijd",/bioscoop|concert|fitness|sportschool|steam|playstation|xbox|nintendo/],["Abonnementen",/netflix|spotify|disney|videoland|youtube premium|icloud|abonnement/],["Kleding",/zara|h&m|primark|nike|adidas|zalando|kleding/],["Gezondheid",/apotheek|tandarts|dokter|huisarts|ziekenhuis|fysio/],["Verzekeringen",/verzekering|aegon|achmea|interpolis|vgz|cz\\b/],["Vakantie",/hotel|booking|airbnb|vlucht|ryanair|easyjet|transavia|vakantie|reis/],["Cadeaus",/cadeau|gift|verjaardag/]];for(let x of r)if(x[1].test(s))return x[0];return"Overig"}
+function accounts(){return state.accounts.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("")}
+function fillAccounts(){["qaac","txac","from","to"].forEach(x=>document.getElementById(x).innerHTML=accounts());if(state.accounts[1])document.getElementById("to").selectedIndex=1}
+function bal(a){let n=+a.opening||0;state.transactions.forEach(t=>{if(t.accountId===a.id)n+=t.type==="income"?t.amount:-t.amount});state.transfers.forEach(t=>{if(t.from===a.id)n-=t.amount;if(t.to===a.id)n+=t.amount});return n}
+function totals(key){let i=0,e=0,s=0;state.transactions.forEach(t=>{if(t.date.slice(0,7)!==key)return;if(t.type==="income")i+=t.amount;else if(t.type==="saving")s+=t.amount;else e+=t.amount});return{i,e,s,n:i-e-s}}
+function curMonth(){let d=new Date(),k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;return k<"2026-10"?"2026-10":k}
+
+function render(){
+fillAccounts();let k=curMonth(),t=totals(k),all=state.accounts.reduce((s,a)=>s+bal(a),0);
+total.textContent=euro(all);inc.textContent=euro(t.i);exp.textContent=euro(t.e);net.textContent=euro(t.n);
+sav.textContent=euro(state.accounts.filter(a=>a.type==="Spaarrekening").reduce((s,a)=>s+bal(a),0));
+inv.textContent=euro(state.accounts.filter(a=>a.type==="Belegging").reduce((s,a)=>s+bal(a),0));
+cur.textContent=euro(state.accounts.filter(a=>a.type==="Betaalrekening").reduce((s,a)=>s+bal(a),0));
+rate.textContent=t.i?Math.round(t.s/t.i*100)+"%":"0%";
+dashAccounts.innerHTML=state.accounts.map(a=>`<div class="account"><b>${esc(a.name)}</b><div class="note">${esc(a.type)}</div><div class="bal">${euro(bal(a))}</div></div>`).join("");
+arows.innerHTML=state.accounts.map(a=>`<tr><td><b>${esc(a.name)}</b></td><td>${esc(a.type)}</td><td class="right">${euro(a.opening)}</td><td class="right">${euro(bal(a))}</td><td><button class="btn danger" data-del-a="${a.id}">Verwijderen</button></td></tr>`).join("");
+renderTx();renderOverview()
+}
+function renderTx(){
+let k=month.value,q=search.value.toLowerCase(),list=state.transactions.filter(t=>t.date.slice(0,7)===k&&(!q||t.desc.toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));
+txrows.innerHTML=list.length?list.map(t=>`<tr><td>${new Date(t.date+"T00:00").toLocaleDateString("nl-NL")}</td><td>${esc(t.desc)}</td><td><span class="pill">${t.type==="income"?"Inkomen":t.type==="saving"?"Sparen":"Uitgave"}</span></td><td>${esc(t.cat)}</td><td>${esc((state.accounts.find(a=>a.id===t.accountId)||{}).name||"—")}</td><td class="right">${euro(t.amount)}</td><td><button class="btn danger" data-del-t="${t.id}">×</button></td></tr>`).join(""):`<tr><td colspan="7" class="empty">Geen transacties.</td></tr>`
+}
+function renderOverview(){
+let arr=[];for(let i=0;i<12;i++){let d=new Date(2026,9+i,1),k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;arr.push({d,k,t:totals(k)})}
+let max=Math.max(1,...arr.map(x=>x.t.i));chart.innerHTML=arr.map(x=>`<div class="barcol"><div class="barval">${euro(x.t.n)}</div><div class="bar" style="height:${Math.max(3,x.t.i/max*150)}px"></div><b>${mn[x.d.getMonth()].slice(0,3)}</b></div>`).join("");
+months.innerHTML=arr.map(x=>`<tr><td>${mn[x.d.getMonth()]} ${x.d.getFullYear()}</td><td class="right green">${euro(x.t.i)}</td><td class="right red">${euro(x.t.e)}</td><td class="right purple">${euro(x.t.s)}</td><td class="right"><b>${euro(x.t.n)}</b></td></tr>`).join("")
+}
+function addTx(){
+let date=td.value,desc=txd.value.trim(),type=txt.value,amount=+txa.value;if(!date||date<START||!desc||amount<=0)return alert("Vul alle gegevens goed in.");
+state.transactions.push({id:id(),date,desc,type,cat:txc.value,amount,accountId:txac.value});save();txd.value="";txa.value="";render()
+}
+function quick(){
+let amount=+qa.value,desc=qd.value.trim(),type=qt.value;if(!desc||amount<=0)return alert("Vul bedrag en omschrijving in.");
+let d=new Date().toISOString().slice(0,10);if(d<START)d=START;state.transactions.push({id:id(),date:d,desc,type,cat:qc.value,amount,accountId:qaac.value});save();qa.value="";qd.value="";render()
+}
+function addAccount(){let name=an.value.trim(),opening=+ab.value;if(!name||Number.isNaN(opening))return alert("Vul naam en beginstand in.");state.accounts.push({id:id(),name,type:at.value,opening});save();an.value="";ab.value="";render()}
+function transfer(){let amount=+ta.value;if(!from.value||!to.value||from.value===to.value||amount<=0||trdate.value<START)return alert("Controleer de overboeking.");state.transfers.push({id:id(),from:from.value,to:to.value,amount,date:trdate.value});save();ta.value="";render()}
+function backup(){let a=document.createElement("a"),u=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:"application/json"}));a.href=u;a.download="mijn-geld-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function catsChange(type,desc,el){fillCats(el,type,suggest(desc,type))}
+
+document.addEventListener("DOMContentLoaded",()=>{
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.page).classList.add("active")});
+fillCats(qc,"expense");fillCats(txc,"income");fillAccounts();
+let now=new Date(),today=now.toISOString().slice(0,10);td.value=trdate.value=today<START?START:today;
+let opts="";for(let i=0;i<12;i++){let d=new Date(2026,9+i,1),k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;opts+=`<option value="${k}">${mn[d.getMonth()]} ${d.getFullYear()}</option>`}month.innerHTML=opts;month.value=curMonth();
+qt.onchange=()=>catsChange(qt.value,qd.value,qc);qd.oninput=()=>catsChange(qt.value,qd.value,qc);txt.onchange=()=>catsChange(txt.value,txd.value,txc);txd.oninput=()=>catsChange(txt.value,txd.value,txc);
+quick.onclick=quick;addtx.onclick=addTx;adda.onclick=addAccount;transfer.onclick=transfer;month.onchange=renderTx;search.oninput=renderTx;
+txrows.onclick=e=>{let x=e.target.dataset.delT;if(x&&confirm("Transactie verwijderen?")){state.transactions=state.transactions.filter(t=>t.id!==x);save();render()}};
+arows.onclick=e=>{let x=e.target.dataset.delA;if(x&&state.accounts.length>1&&confirm("Rekening verwijderen?")){state.accounts=state.accounts.filter(a=>a.id!==x);state.transactions=state.transactions.filter(t=>t.accountId!==x);state.transfers=state.transfers.filter(t=>t.from!==x&&t.to!==x);save();render()}};
+document.getElementById("export").onclick=backup;document.getElementById("import").onclick=()=>file.click();
+file.onchange=()=>{let f=file.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.accounts||!x.transactions||!x.transfers)throw 0;state=x;save();render();alert("Back-up teruggezet.")}catch(e){alert("Ongeldige back-up.")}};r.readAsText(f)};
+reset.onclick=()=>{if(confirm("Alles wissen?")){state={accounts:[],transactions:[],transfers:[]};save();render()}};
+render()
+});
+</script>
+</body>
+</html>
