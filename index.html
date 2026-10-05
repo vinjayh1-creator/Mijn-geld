@@ -1366,6 +1366,13 @@ nav button.active{background:var(--soft);color:var(--primary);}
   .dashboard-account-tx-row > strong{font-size:9.5px;}
 }
 </style>
+<style id="recurring-deductions-match-fixed">
+/* Afschrijvingen: exact dezelfde compacte typografie als Vaste transacties */
+#recurring .recurring-deductions-compact,#recurring .recurring-deductions-compact *{font-size:12px !important;}
+#recurring .recurring-deductions-compact .small{font-size:11px !important;}
+#recurring .recurring-deductions-compact td{padding:7px 6px !important;line-height:1.25 !important;}
+@media(max-width:700px){#recurring .recurring-deductions-compact td{padding:6px 5px !important;font-size:11px !important;}#recurring .recurring-deductions-compact .small{font-size:10px !important;}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -3087,7 +3094,7 @@ ${(()=>{
   const deductions=(Array.isArray(data.transactions)?data.transactions:[])
     .filter(t=>t.recurringId && t.kind==="expense")
     .sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-  return `<div class="card transactions"><div class="section-title">Afschrijvingen</div><div class="small" style="margin-bottom:12px">Hier zie je alleen vaste kosten die daadwerkelijk zijn verwerkt, op de vaste dag die je hebt ingesteld.</div>${deductions.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:8px 6px">Datum</th><th style="text-align:left;padding:8px 6px">Omschrijving</th><th style="text-align:left;padding:8px 6px">Rekening</th><th style="text-align:right;padding:8px 6px">Bedrag</th></tr></thead><tbody>${deductions.map(t=>`<tr><td style="padding:9px 6px;border-top:1px solid var(--border)">${new Date(t.date+"T12:00:00").toLocaleDateString("nl-NL")}</td><td style="padding:9px 6px;border-top:1px solid var(--border)">${esc(t.description)}</td><td style="padding:9px 6px;border-top:1px solid var(--border)">${esc(accountById(t.accountId)?.name||"-")}</td><td style="padding:9px 6px;border-top:1px solid var(--border);text-align:right" class="negative">-${euro(t.amount)}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">Nog geen vaste kosten afgeschreven.</div>`}</div>`;
+  return `<div class="card transactions recurring-deductions-compact"><div class="section-title">Afschrijvingen</div><div class="small" style="margin-bottom:12px">Hier zie je alleen vaste kosten die daadwerkelijk zijn verwerkt, op de vaste dag die je hebt ingesteld.</div>${deductions.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:8px 6px">Datum</th><th style="text-align:left;padding:8px 6px">Omschrijving</th><th style="text-align:left;padding:8px 6px">Rekening</th><th style="text-align:right;padding:8px 6px">Bedrag</th></tr></thead><tbody>${deductions.map(t=>`<tr><td style="padding:9px 6px;border-top:1px solid var(--border)">${new Date(t.date+"T12:00:00").toLocaleDateString("nl-NL")}</td><td style="padding:9px 6px;border-top:1px solid var(--border)">${esc(t.description)}</td><td style="padding:9px 6px;border-top:1px solid var(--border)">${esc(accountById(t.accountId)?.name||"-")}</td><td style="padding:9px 6px;border-top:1px solid var(--border);text-align:right" class="negative">-${euro(t.amount)}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">Nog geen vaste kosten afgeschreven.</div>`}</div>`;
 })()}`;
 $("saveWeeklySalary").onclick=()=>{
   const amount=Number($("weeklySalaryAmount").value);
@@ -3313,6 +3320,36 @@ init();
   #recurring .recurring-list-card + .card table{font-size:9px;}
   #recurring .recurring-list-card + .card th{font-size:8px;padding:6px 5px !important;}
   #recurring .recurring-list-card + .card td{font-size:9px;padding:7px 5px !important;}
+}
+</style>
+
+<style id="recurring-match-transactions-final">
+/* Vaste transacties gebruiken dezelfde compacte maatvoering als het tabblad Transacties */
+#recurring .recurring-list-card .recurring-item{
+  padding:8px 10px;
+  gap:8px;
+  border-radius:10px;
+}
+#recurring .recurring-list-card .account-left{gap:9px;min-width:0;}
+#recurring .recurring-list-card .account-left strong{font-size:12px !important;font-weight:600;}
+#recurring .recurring-list-card .account-left .small{font-size:10px !important;line-height:1.25;}
+#recurring .recurring-list-card .account-icon{width:28px;height:28px;min-width:28px;border-radius:8px;}
+#recurring .recurring-list-card .account-icon svg{width:14px;height:14px;}
+#recurring .recurring-list-card .recurring-actions{gap:4px;}
+#recurring .recurring-list-card .recurring-actions > span{font-size:12px !important;font-weight:600;}
+#recurring .recurring-list-card .icon-btn{width:28px;height:28px;min-width:28px;padding:0;}
+#recurring .recurring-list-card .icon-btn svg{width:13px;height:13px;}
+@media(max-width:700px){
+  #recurring .recurring-list-card .recurring-item{padding:7px 8px;gap:7px;}
+  #recurring .recurring-list-card .account-left{gap:8px;}
+  #recurring .recurring-list-card .account-left strong{font-size:10.5px !important;}
+  #recurring .recurring-list-card .account-left .small{font-size:9px !important;}
+  #recurring .recurring-list-card .account-icon{width:25px;height:25px;min-width:25px;border-radius:7px;}
+  #recurring .recurring-list-card .account-icon svg{width:12px;height:12px;}
+  #recurring .recurring-list-card .recurring-actions{gap:3px;}
+  #recurring .recurring-list-card .recurring-actions > span{font-size:10px !important;}
+  #recurring .recurring-list-card .icon-btn{width:25px;height:25px;min-width:25px;}
+  #recurring .recurring-list-card .icon-btn svg{width:11px;height:11px;}
 }
 </style>
 </body>
