@@ -3082,7 +3082,7 @@ $("recurring").innerHTML=`<div class="topbar"><div><h1>Terugkerend</h1><div clas
 <div class="card"><div class="section-title">Terugkerende transactie toevoegen</div><form id="recForm"><div class="toggle"><button type="button" data-reckind="expense" class="active">Uitgave</button><button type="button" data-reckind="income">Inkomst</button></div>
 <div class="form-grid"><div class="field"><label>Omschrijving</label><input id="recDesc" required placeholder="Bijv. Huur"></div><div class="field"><label>Bedrag (€)</label><input id="recAmount" type="number" min="0.01" step=".01" required inputmode="decimal"></div><div class="field"><label>Categorie</label><select id="recCat">${categories.map(c=>`<option>${c}</option>`).join("")}</select></div><div class="field"><label>Rekening</label><select id="recAcc">${data.accounts.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("")}</select></div><div class="field"><label>Dag van de maand</label><input id="recDay" type="number" min="1" max="31" step="1" value="1" required inputmode="numeric"><div class="small">Bijv. 1 voor huur, 5 voor verzekering.</div></div></div>
 <div class="form-actions"><button class="btn primary"><i data-lucide="repeat"></i>Toevoegen</button></div></form></div>
-<div class="card transactions"><div class="section-title">Vaste transacties</div>${data.recurring.length?data.recurring.map((r,i)=>`<div class="account"><div class="account-left"><div class="account-icon"><i data-lucide="repeat"></i></div><div><strong>${esc(r.description)}</strong><div class="small">Elke maand op dag ${Number(r.day||1)} · ${esc(r.category)} · ${esc(accountById(r.accountId)?.name||"-")}</div></div></div><div style="display:flex;align-items:center;gap:12px"><span class="${r.kind==="income"?"positive":"negative"}">${r.kind==="income"?"+":"-"}${euro(r.amount)}</span><button class="icon-btn danger" data-rec-delete="${i}"><i data-lucide="trash-2"></i></button></div></div>`).join(""):`<div class="empty">Nog geen terugkerende transacties.</div>`}</div>
+<div class="card transactions recurring-list-card"><div class="section-title">Vaste transacties</div>${data.recurring.length?data.recurring.map((r,i)=>`<div class="account recurring-item"><div class="account-left"><div class="account-icon"><i data-lucide="repeat"></i></div><div class="recurring-info"><strong>${esc(r.description)}</strong><div class="small">Elke maand op dag ${Number(r.day||1)} · ${esc(r.category)} · ${esc(accountById(r.accountId)?.name||"-")}</div></div></div><div class="recurring-actions"><span class="${r.kind==="income"?"positive":"negative"}">${r.kind==="income"?"+":"-"}${euro(r.amount)}</span><button class="icon-btn recurring-edit-btn" data-rec-edit-day="${i}" title="Dag aanpassen" aria-label="Dag aanpassen"><i data-lucide="pencil"></i></button><button class="icon-btn danger" data-rec-delete="${i}" title="Verwijderen" aria-label="Verwijderen"><i data-lucide="trash-2"></i></button></div></div>`).join(""):`<div class="empty">Nog geen terugkerende transacties.</div>`}</div>
 ${(()=>{
   const deductions=(Array.isArray(data.transactions)?data.transactions:[])
     .filter(t=>t.recurringId && t.kind==="expense")
@@ -3102,6 +3102,19 @@ $("saveWeeklySalary").onclick=()=>{
 let kind="expense";
 document.querySelectorAll("[data-reckind]").forEach(b=>b.onclick=()=>{kind=b.dataset.reckind;document.querySelectorAll("[data-reckind]").forEach(x=>x.classList.toggle("active",x===b))});
 $("recForm").onsubmit=e=>{e.preventDefault();const amount=Number($("recAmount").value);if(!Number.isFinite(amount)||amount<=0){notify("Controleer het bedrag.");return}const day=Math.min(31,Math.max(1,Math.floor(Number($("recDay").value)||1)));const description=$("recDesc").value.trim();if(!description){notify("Vul een omschrijving in.");return}data.recurring.push({id:uid(),description,amount,category:$("recCat").value,accountId:$("recAcc").value,day,kind});saveAndRender()};
+document.querySelectorAll("[data-rec-edit-day]").forEach(b=>b.onclick=()=>{
+  const i=Number(b.dataset.recEditDay);
+  const r=data.recurring[i];
+  if(!r)return;
+  const currentDay=Number(r.day||1);
+  const input=prompt(`Op welke dag van de maand moet \"${r.description}\" worden verwerkt? (1 t/m 31)`,String(currentDay));
+  if(input===null)return;
+  const day=Number(String(input).replace(",","."));
+  if(!Number.isFinite(day)||day<1||day>31||!Number.isInteger(day)){notify("Kies een hele dag tussen 1 en 31.");return}
+  r.day=day;
+  saveAndRender();
+  notify(`Dag aangepast naar ${day}.`);
+});
 document.querySelectorAll("[data-rec-delete]").forEach(b=>b.onclick=()=>{if(confirm("Terugkerende transactie verwijderen?")){data.recurring.splice(Number(b.dataset.recDelete),1);saveAndRender()}});
 }
 
@@ -3268,6 +3281,38 @@ init();
 }
 .dashboard-revolut-details-inner{
   background:transparent !important;
+}
+</style>
+
+<style id="recurring-mobile-compact">
+/* Compactere vaste transacties en afschrijvingen op mobiel */
+.recurring-item{padding:10px 11px;gap:10px;}
+.recurring-info{min-width:0;}
+.recurring-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.recurring-actions > span{font-size:12px;font-weight:650;white-space:nowrap;}
+.recurring-edit-btn{color:var(--text);}
+#recurring .recurring-list-card .account-left strong{font-size:12px;}
+#recurring .recurring-list-card .account-left .small{font-size:10px;line-height:1.25;}
+#recurring .recurring-list-card .account-icon{width:30px;height:30px;min-width:30px;}
+#recurring .recurring-list-card .icon-btn{width:29px;height:29px;min-width:29px;}
+#recurring .recurring-list-card .icon-btn svg{width:14px;height:14px;}
+#recurring .recurring-list-card{overflow:hidden;}
+#recurring .recurring-list-card + .card{overflow:hidden;}
+@media(max-width:700px){
+  #recurring .recurring-item{padding:8px 9px;gap:7px;min-height:0;}
+  #recurring .recurring-list-card .account-left{gap:8px;min-width:0;}
+  #recurring .recurring-list-card .account-left strong{font-size:11px;}
+  #recurring .recurring-list-card .account-left .small{font-size:9px;line-height:1.2;}
+  #recurring .recurring-list-card .account-icon{width:26px;height:26px;min-width:26px;}
+  #recurring .recurring-list-card .account-icon svg{width:13px;height:13px;}
+  #recurring .recurring-actions{gap:4px;}
+  #recurring .recurring-actions > span{font-size:10px;}
+  #recurring .recurring-list-card .icon-btn{width:26px;height:26px;min-width:26px;}
+  #recurring .recurring-list-card .icon-btn svg{width:12px;height:12px;}
+  #recurring .recurring-list-card + .card .small{font-size:10px;}
+  #recurring .recurring-list-card + .card table{font-size:9px;}
+  #recurring .recurring-list-card + .card th{font-size:8px;padding:6px 5px !important;}
+  #recurring .recurring-list-card + .card td{font-size:9px;padding:7px 5px !important;}
 }
 </style>
 </body>
